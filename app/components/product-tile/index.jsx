@@ -6,8 +6,10 @@
  */
 
 import React, {useRef} from 'react'
+import {useState} from "react";
 import PropTypes from 'prop-types'
 import {HeartIcon, HeartSolidIcon} from '@salesforce/retail-react-app/app/components/icons'
+import { useDisclosure, Button, Modal, ModalCloseButton, ModalContent, ModalOverlay, ModalBody} from '@chakra-ui/react'
 
 // Components
 import {
@@ -20,6 +22,7 @@ import {
     IconButton
 } from '@salesforce/retail-react-app/app/components/shared/ui'
 import DynamicImage from '@salesforce/retail-react-app/app/components/dynamic-image'
+import QuickView from '../quick-view'
 
 // Hooks
 import {useIntl} from 'react-intl'
@@ -57,6 +60,8 @@ export const Skeleton = () => {
  */
 const ProductTile = (props) => {
     const intl = useIntl()
+    const [IsHovered, setIsHovered] = useState(false)
+    const { isOpen, onOpen, onClose } = useDisclosure()
     const {
         product,
         enableFavourite = false,
@@ -80,25 +85,40 @@ const ProductTile = (props) => {
 
     return (
         <Box {...styles.container}>
-            <Link
+         <Modal isOpen={isOpen} onClose={onClose} size="5xl">
+        <ModalOverlay />
+        <ModalContent>
+          
+          <ModalCloseButton />
+          <ModalBody className="">
+          <QuickView productId={productId}></QuickView>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+            
+                <Box {...styles.imageWrapper} position="relative" onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}>
+                <Link zIndex={1}
                 data-testid="product-tile"
                 to={productUrlBuilder({id: productId}, intl.local)}
                 {...styles.link}
                 {...rest}
             >
-                <Box {...styles.imageWrapper}>
                     {image && (
                         <AspectRatio {...styles.image}>
-                            <DynamicImage
+                            <DynamicImage 
                                 src={`${image.disBaseLink || image.link}[?sw={width}&q=60]`}
                                 widths={dynamicImageProps?.widths}
                                 imageProps={{
                                     alt: image.alt,
                                     ...dynamicImageProps?.imageProps
-                                }}
+                                }}     
                             />
-                        </AspectRatio>
+                        </AspectRatio>  
                     )}
+                    </Link>
+                    
+                    {IsHovered && <Button zIndex={5} position="absolute" top="0" onClick={onOpen} >Quick View</Button>}
                 </Box>
 
                 {/* Title */}
@@ -124,7 +144,6 @@ const ProductTile = (props) => {
                               currency: currency || activeCurrency
                           })}
                 </Text>
-            </Link>
             {enableFavourite && (
                 <Box
                     onClick={(e) => {
